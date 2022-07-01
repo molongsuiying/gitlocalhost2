@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.college.mapper.AppAchievementMapper">
+
+
+    <resultMap id="AppAchievement" type="org.jeecg.modules.college.entity.AppAchievement">
+
+        <id property="id" column="id" />
+        <result property="username" column="username"/>
+        <result property="clauseId" column="clause_id"/>
+        <result property="clauseScore" column="clause_score"/>
+        <result property="acquireTime" column="acquire_time"/>
+        <result property="status" column="status"/>
+        <result property="remarks" column="remarks"/>
+        <result property="openShow" column="open_show"/>
+        <result property="createTime" column="create_time"/>
+        <result property="createBy" column="create_by"/>
+        <result property="clauseName" column="clause_name"/>
+        <result property="description" column="description"/>
+    </resultMap>
+
+
+    <select id="queryList" resultMap="AppAchievement">
+       select * ,b.name clause_name
+        FROM app_achievement a left join app_clause b on a.clause_id = b.id
+<!--        WHERE 1=1-->
+<!--        <if test="createBy != null and createBy != '' ">-->
+<!--            AND a.create_by = #{createBy}-->
+<!--        </if>-->
+
+<!--        <if test="status != null and status != '' ">-->
+<!--            AND a.status = #{status}-->
+<!--        </if>-->
+<!--        <if test="nonSubmit != null and nonSubmit != '' ">-->
+<!--            AND a.status <![CDATA[< ]]> #{nonSubmit}-->
+<!--        </if>-->
+
+<!--        <if test="beginTime != null and beginTime != '' ">-->
+<!--            AND a.acquire_time  <![CDATA[>= ]]> #{beginTime}-->
+<!--        </if>-->
+<!--          -->
+<!--        <if test="endTime != null and endTime != '' ">-->
+<!--            AND a.acquire_time <![CDATA[<= ]]> #{endTime}-->
+<!--        </if>-->
+
+<!--        <if test="userName != null and userName != '' ">-->
+<!--            AND a.username LIKE CONCAT('%',#{userName},'%')-->
+<!--        </if>-->
+
+<!--        <if test="clauseId != null and clauseId != '' ">-->
+<!--            AND a.clause_id != #{clauseId}-->
+<!--        </if>-->
+<!--        ) AS temp_row-->
+<!--        <if test="pageSize != null and pageSize != '' ">-->
+<!--            WHERE rownumber>((#{pageNo}-1) * #{pageSize})-->
+<!--        </if>-->
+    </select>
+
+    <select id="countList" resultType="int">
+        select count(a.id)
+        FROM app_achievement a left join app_clause b on a.clause_id = b.id
+<!--        WHERE-->
+<!--        <if test="createBy != null and createBy != '' ">-->
+<!--            AND a.create_by = #{createBy}-->
+<!--        </if>-->
+
+<!--        <if test="status != null and status != '' ">-->
+<!--            AND a.status = #{status}-->
+<!--        </if>-->
+<!--        <if test="nonSubmit != null and nonSubmit != '' ">-->
+<!--            AND a.status <![CDATA[< ]]> #{nonSubmit}-->
+<!--        </if>-->
+
+<!--        <if test="beginTime != null and beginTime != '' ">-->
+<!--            AND a.acquire_time  <![CDATA[>= ]]> #{beginTime}-->
+<!--        </if>-->
+<!--        <if test="endTime != null and endTime != '' ">-->
+<!--            AND a.acquire_time <![CDATA[<= ]]> #{endTime}-->
+
+<!--        </if>-->
+
+<!--        <if test="userName != null and userName != '' ">-->
+<!--            AND a.username LIKE CONCAT('%',#{userName},'%')-->
+<!--        </if>-->
+
+<!--        <if test="clauseId != null and clauseId != '' ">-->
+<!--            AND a.clause_id != #{clauseId}-->
+<!--        </if>-->
+<!--        ) AS temp_row-->
+<!--        <if test="pageSize != null and pageSize != '' ">-->
+<!--            WHERE rownumber>((#{pageNo}-1) * #{pageSize})-->
+<!--        </if>-->
+    </select>
+
+    <select id="findById" resultMap="AppAchievement">
+        SELECT f.*,zm.name clause_name
+        FROM app_achievement f
+        LEFT JOIN app_clause zm on zm.id = f.clause_id
+        WHERE 1 = 1
+        AND f.id = #{id}
+    </select>
+
+    <select id="queryListByIds" resultMap="AppAchievement">
+        SELECT f.*,zm.name clause_name
+        FROM app_achievement f
+        LEFT JOIN app_clause zm on zm.id = f.clause_id
+        WHERE 1 = 1
+        AND f.id in
+        <foreach item="key" collection="ids" open="(" separator="," close=")">
+            #{key}
+        </foreach>
+    </select>
+
+    <update id="submitBatch">
+        UPDATE app_achievement
+        SET status = 1
+        WHERE 1 = 1
+        AND id in
+        <foreach item="key" collection="ids" open="(" separator="," close=")">
+            #{key}
+        </foreach>
+    </update>
+
+    <update id="passBatch">
+        UPDATE app_achievement
+        SET status = 2
+        WHERE 1 = 1
+        AND id in
+        <foreach item="key" collection="ids" open="(" separator="," close=")">
+            #{key}
+        </foreach>
+    </update>
+
+</mapper>

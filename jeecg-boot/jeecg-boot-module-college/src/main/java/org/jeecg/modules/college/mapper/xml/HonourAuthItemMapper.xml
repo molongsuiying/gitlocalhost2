@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.college.mapper.HonourAuthItemMapper">
+
+
+    <resultMap id="honourAuthItemMap" type="org.jeecg.modules.college.entity.HonourAuthItem">
+
+        <id property="id" column="id" />
+        <result property="userId" column="user_id"/>
+        <result property="authId" column="auth_id"/>
+        <result property="honourType" column="honour_type"/>
+        <result property="editAuth" column="edit_auth"/>
+        <result property="editDeadline" column="edit_deadline"/>
+        <result property="downloadAuth" column="download_auth"/>
+        <result property="downloadDeadline" column="download_deadline"/>
+        <result property="exportAuth" column="export_auth"/>
+        <result property="exportDeadline" column="export_deadline"/>
+        <result property="showAuth" column="show_auth"/>
+        <result property="showDeadline" column="show_deadline"/>
+        <result property="examineAuth" column="examine_auth"/>
+        <result property="examineDeadline" column="examine_deadline"/>
+        <result property="createTime" column="create_time"/>
+        <result property="createBy" column="create_by"/>
+        <result property="realname" column="realname"/>
+        <result property="username" column="username"/>
+    </resultMap>
+
+
+    <select id="queryList" resultMap="honourAuthItemMap">
+        SELECT *
+        FROM zd_honour_auth_item a
+        WHERE 1 = 1 AND auth_id = #{authId}
+        <if test="userId != null and userId != '' ">
+            AND a.user_id = #{userId}
+        </if>
+        <if test="honourType != null and honourType != '' ">
+            AND a.honour_type = #{honourType}
+        </if>
+        <if test="editAuth != null and editAuth != '' ">
+            AND a.edit_auth = #{editAuth}
+        </if>
+        <if test="downloadAuth != null and downloadAuth != '' ">
+            AND a.download_auth = #{downloadAuth}
+        </if>
+        <if test="exportAuth != null and exportAuth != '' ">
+            AND a.export_auth = #{exportAuth}
+        </if>
+        <if test="showAuth != null and showAuth != '' ">
+            AND a.show_auth = #{showAuth}
+        </if>
+        <if test="examineAuth != null and examineAuth != '' ">
+            AND a.examine_auth = #{examineAuth}
+        </if>
+        ORDER BY honour_type
+    </select>
+
+    <select id="countList" resultType="int">
+        SELECT COUNT(id)
+        FROM zd_honour_auth_item a
+        WHERE 1 = 1 AND auth_id = #{authId}
+        <if test="userId != null and userId != '' ">
+            AND a.user_id = #{userId}
+        </if>
+        <if test="honourType != null and honourType != '' ">
+            AND a.honour_type = #{honourType}
+        </if>
+        <if test="editAuth != null and editAuth != '' ">
+            AND a.edit_auth = #{editAuth}
+        </if>
+        <if test="downloadAuth != null and downloadAuth != '' ">
+            AND a.download_auth = #{downloadAuth}
+        </if>
+        <if test="exportAuth != null and exportAuth != '' ">
+            AND a.export_auth = #{exportAuth}
+        </if>
+        <if test="showAuth != null and showAuth != '' ">
+            AND a.show_auth = #{showAuth}
+        </if>
+        <if test="examineAuth != null and examineAuth != '' ">
+            AND a.examine_auth = #{examineAuth}
+        </if>
+    </select>
+
+    <select id="findByAuthIdAndType" resultType="int">
+        SELECT COUNT(id) FROM zd_honour_auth_item
+        WHERE 1 = 1
+        AND auth_id = #{authId}
+        AND honour_type = #{honourType}
+    </select>
+
+    <delete id="removeByUserId" >
+        DELETE zd_honour_auth_item
+        WHERE user_id = #{userId}
+    </delete>
+
+    <select id="findItemByUserAndType" resultMap="honourAuthItemMap">
+        SELECT TOP 1 *
+        FROM zd_honour_auth_item
+        WHERE 1 = 1
+        AND user_id = #{userId}
+        AND honour_type = #{honourType}
+    </select>
+
+
+    <update id="updateExportAuthEveryDay">
+        UPDATE zd_honour_auth_item
+        SET export_auth = 0, export_deadline = NULL
+        WHERE export_auth = 2 AND export_deadline <![CDATA[<]]> GETDATE();
+    </update>
+
+    <update id="updateDownAuthEveryDay">
+        UPDATE zd_honour_auth_item
+        SET download_auth = 0, download_deadline = NULL
+        WHERE download_auth = 2 AND download_auth <![CDATA[<]]> GETDATE();
+    </update>
+
+</mapper>

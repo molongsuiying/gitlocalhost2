@@ -1,0 +1,375 @@
+{
+  "fileColumns":["title", "leader","workName","honourLevel_dictText", "articleNum", "acquireTime", "authorityType_dictText", "achievementType_dictText", "achievementLevel_dictText","teamPersons", "majorName"],
+  "cerColumns": ["title","leader", "prizeType", "honourLevel_dictText", "acquireTime", "authorityType_dictText",
+    "achievementType_dictText",
+    "achievementLevel_dictText", "teamPersons", "majorName", "status"
+  ],
+  "defCerColumns": [{
+      "title": "标题",
+      "align": "center",
+      "dataIndex": "title"
+    },
+    {
+      "title": "负责人",
+      "align": "center",
+      "dataIndex": "leader"
+    },
+    {
+      "title": "证书类别",
+      "align": "center",
+      "dataIndex": "prizeType"
+    },
+    {
+      "title": "荣誉级别",
+      "align": "center",
+      "dataIndex": "honourLevel_dictText"
+    },
+    {
+      "title": "颁发时间",
+      "align": "center",
+      "dataIndex": "acquireTime"
+    },
+    {
+      "title": "颁发机关",
+      "align": "center",
+      "dataIndex": "authorityType_dictText"
+
+    },
+    {
+      "title": "成果类别",
+      "align": "center",
+      "dataIndex": "achievementType_dictText"
+    },
+    {
+      "title": "成果级别",
+      "align": "center",
+      "dataIndex": "achievementLevel_dictText"
+    },
+    {
+      "title": "团队成员",
+      "align": "center",
+      "dataIndex": "teamPersons"
+    },
+    {
+      "title": "归属专业",
+      "align": "center",
+      "dataIndex": "majorName"
+    },
+    {
+      "title": "审核状态",
+      "align": "center",
+      "dataIndex": "status",
+      "scopedSlots": {
+        "customRender": "status"
+      }
+    },
+    {
+      "title": "操作",
+      "dataIndex": "action",
+      "align": "center"
+    }
+  ],
+  "articleColumns": ["title", "leader", "articleType_dictText", "authorityType_dictText", "acquireTime",
+    "achievementType_dictText", "achievementLevel_dictText", "teamPersons", "majorName", "status"
+  ],
+  "defArticleColumns": [{
+      "title": "标题",
+      "align": "center",
+      "dataIndex": "title"
+    },
+    {
+      "title": "负责人",
+      "align": "center",
+      "dataIndex": "leader"
+    },
+    {
+      "title": "物图类别",
+      "align": "center",
+      "dataIndex": "articleType_dictText"
+    },
+    {
+      "title": "开展部门",
+      "align": "center",
+      "dataIndex": "authorityType_dictText"
+    },
+    {
+      "title": "发表时间",
+      "align": "center",
+      "dataIndex": "acquireTime"
+    },
+    {
+      "title": "成果类别",
+      "align": "center",
+      "dataIndex": "achievementType_dictText"
+    },
+    {
+      "title": "成果级别",
+      "align": "center",
+      "dataIndex": "achievementLevel_dictText"
+    },
+    {
+      "title": "团队成员",
+      "align": "center",
+      "dataIndex": "teamPersons"
+    },
+    {
+      "title": "归属专业",
+      "align": "center",
+      "dataIndex": "majorName"
+    },
+    {
+      "title": "审核状态",
+      "align": "center",
+      "dataIndex": "status",
+      "scopedSlots": {
+        "customRender": "status"
+      }
+    }
+  ],
+  "agreeColumns": ["title", "leader", "cooperationType_dictText", "cooperationUnit", "acquireTime", "teamPersons", "majorName", "status"],
+  "defAgreeColumns": [{
+      "title": "标题",
+      "align": "center",
+      "dataIndex": "title"
+    },
+    {
+      "title": "负责人",
+      "align": "center",
+      "dataIndex": "leader"
+    },
+    {
+      "title": "合作类别",
+      "align": "center",
+      "dataIndex": "cooperationType_dictText"
+    },
+    {
+      "title": "合作单位",
+      "align": "center",
+      "dataIndex": "cooperationUnit"
+    },
+    {
+      "title": "签约时间",
+      "align": "center",
+      "dataIndex": "acquireTime"
+    },
+    {
+      "title": "团队成员",
+      "align": "center",
+      "dataIndex": "teamPersons"
+    },
+    {
+      "title": "归属专业",
+      "align": "center",
+      "dataIndex": "majorName"
+    },
+    {
+      "title": "审核状态",
+      "align": "center",
+      "dataIndex": "status",
+      "scopedSlots": {
+        "customRender": "status"
+      }
+    },
+    {
+      "title": "操作",
+      "dataIndex": "action",
+      "align": "center"
+    }
+  ],
+  "reportColumns": ["title", "leader", "mediumType_dictText", "mediumName", "author", "acquireTime", "achievementType_dictText",
+    "achievementLevel_dictText", "teamPersons", "majorName", "status"
+  ],
+  "defReportColumns": [{
+      "title": "标题",
+      "align": "center",
+      "dataIndex": "title"
+    },
+    {
+      "title": "负责人",
+      "align": "center",
+      "dataIndex": "leader"
+    },
+    {
+      "title": "媒体类别",
+      "align": "center",
+      "dataIndex": "mediumType_dictText"
+    },
+    {
+      "title": "媒体名称",
+      "align": "center",
+      "dataIndex": "mediumName"
+    },
+    {
+      "title": "作者署名",
+      "align": "center",
+      "dataIndex": "author"
+    },
+    {
+      "title": "发表时间",
+      "align": "center",
+      "dataIndex": "acquireTime"
+    },
+    {
+      "title": "成果类别",
+      "align": "center",
+      "dataIndex": "achievementType_dictText"
+    },
+    {
+      "title": "成果级别",
+      "align": "center",
+      "dataIndex": "achievementLevel_dictText"
+    },
+    {
+      "title": "团队成员",
+      "align": "center",
+      "dataIndex": "teamPersons"
+    },
+    {
+      "title": "归属专业",
+      "align": "center",
+      "dataIndex": "majorName"
+    },
+    {
+      "title": "审核状态",
+      "align": "center",
+      "dataIndex": "status",
+      "scopedSlots": {
+        "customRender": "status"
+      }
+    },
+    {
+      "title": "操作",
+      "dataIndex": "action",
+      "align": "center"
+    }
+  ],
+  "personColumns": ["title", "leader", "certificateType_dictText", "acquireUnit", "acquireTime", "teamPersons", "majorName", "status"],
+  "defPersonColumns": [{
+      "title": "标题",
+      "align": "center",
+      "dataIndex": "title"
+    },
+    {
+      "title": "负责人",
+      "align": "center",
+      "dataIndex": "leader"
+    },
+    {
+      "title": "人才证书",
+      "align": "center",
+      "dataIndex": "certificateType_dictText"
+    },
+    {
+      "title": "授发单位",
+      "align": "center",
+      "dataIndex": "acquireUnit"
+    },
+    {
+      "title": "授发时间",
+      "align": "center",
+      "dataIndex": "acquireTime"
+    },
+    {
+      "title": "团队成员",
+      "align": "center",
+      "dataIndex": "teamPersons"
+    },
+    {
+      "title": "归属专业",
+      "align": "center",
+      "dataIndex": "majorName"
+    },
+    {
+      "title": "审核状态",
+      "align": "center",
+      "dataIndex": "status",
+      "scopedSlots": {
+        "customRender": "status"
+      }
+    },
+    {
+      "title": "操作",
+      "dataIndex": "action",
+      "align": "center"
+    }
+  ],
+  "projectColumns": ["title", "leader", "projectType", "buildProjectCharge", "overProjectCharge", "honourLevel_dictText",
+    "acquireTime", "authorityType_dictText", "achievementType_dictText", "achievementLevel_dictText", "teamPersons", "majorName",
+    "status"
+  ],
+  "defProjectColumns": [{
+      "title": "标题",
+      "align": "center",
+      "dataIndex": "title"
+    },
+    {
+      "title": "负责人",
+      "align": "center",
+      "dataIndex": "leader"
+    },
+    {
+      "title": "课题类别",
+      "align": "center",
+      "dataIndex": "projectType"
+    },
+    {
+      "title": "立项负责人",
+      "align": "center",
+      "dataIndex": "buildProjectCharge"
+
+    },
+    {
+      "title": "结项负责人",
+      "align": "center",
+      "dataIndex": "overProjectCharge"
+    },
+    {
+      "title": "荣誉级别",
+      "align": "center",
+      "dataIndex": "honourLevel_dictText"
+    },
+    {
+      "title": "颁发时间",
+      "align": "center",
+      "dataIndex": "acquireTime"
+    },
+    {
+      "title": "颁发机关",
+      "align": "center",
+      "dataIndex": "authorityType_dictText"
+    },
+    {
+      "title": "成果类别",
+      "align": "center",
+      "dataIndex": "achievementType_dictText"
+    },
+    {
+      "title": "成果级别",
+      "align": "center",
+      "dataIndex": "achievementLevel_dictText"
+    },
+    {
+      "title": "团队成员",
+      "align": "center",
+      "dataIndex": "teamPersons"
+    },
+    {
+      "title": "归属专业",
+      "align": "center",
+      "dataIndex": "majorName"
+    },
+    {
+      "title": "审核状态",
+      "align": "center",
+      "dataIndex": "status",
+      "scopedSlots": {
+        "customRender": "status"
+      }
+    },
+    {
+      "title": "操作",
+      "dataIndex": "action",
+      "align": "center"
+    }
+  ]
+}

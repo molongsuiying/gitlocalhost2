@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.college.mapper.AppClauseMapper">
+
+
+	<resultMap id="TreeModel" type="org.jeecg.modules.college.model.TreeModel" >
+		<result column="id" property="key" jdbcType="VARCHAR"/>
+		<result column="name" property="title" jdbcType="VARCHAR"/>
+		<result column="icon" property="icon" jdbcType="VARCHAR"/>
+		<result column="parent_id" property="parentId" jdbcType="VARCHAR"/>
+		<result column="leaf_flag" property="isLeaf" jdbcType="INTEGER"/>
+	</resultMap>
+	
+	<!-- 通过<resultMap>映射实体类属性名和表的字段名对应关系 -->
+	<resultMap id="AppClause" type="org.jeecg.modules.college.entity.AppClause">
+	   <!-- result属性映射非匹配字段 -->
+	    <result column="is_route" property="route"/>
+	    <result column="keep_alive" property="keepAlive"/>
+	    <result column="is_leaf" property="leaf"/>
+		<result column="parent_id" property="parentId"/>
+		<result column="parentName" property="parentName"/>
+		<result column="TopParentName" property="TopParentName"/>
+	</resultMap>
+
+<!--查询条款内容列表（三级）-->
+	<select id="queryThreeList" resultMap="AppClause">
+		select a.id,a.parent_id,a.name,a.url,a.sort_no,b.name parentName,(select d.name from app_clause c left join app_clause d on c.parent_id = d.id where c.id = a.parent_id ) TopParentName
+		from app_clause a left join app_clause b on a.parent_id = b.id where a.menu_type = 2
+	</select>
+
+<!--查询条款类型（一级和二级）-->
+	<select id="queryAppClauseList" resultMap="AppClause">
+		select a.id,a.parent_id,a.name,a.url,a.sort_no,b.name parentName
+		from app_clause a left join app_clause b on a.parent_id = b.id where a.menu_type != 2
+	</select>
+
+	<select id="countList" resultType="int">
+			select count(a.id)
+			from app_clause a left join app_clause b on a.parent_id = b.id where a.menu_type != 2
+	</select>
+
+	<select id="countListThree" resultType="int">
+			select count(a.id)
+			from app_clause a left join app_clause b on a.parent_id = b.id where a.menu_type = 2
+	</select>
+	
+	<select id="queryListByParentId" parameterType="Object"  resultMap="TreeModel">
+		   SELECT   
+                   id
+                   ,parent_id
+                   ,name
+                   ,icon
+                   ,leaf_flag
+		   FROM   app_clause
+		   WHERE 1=1
+		    <choose>
+		   		<when test="parentId != null and parentId != ''">
+		   			AND parent_id =  #{parentId,jdbcType=VARCHAR}
+		   		</when>
+		   		<otherwise>
+		   			AND parent_id is null
+		   		</otherwise>
+		    </choose>
+	</select>
+	
+
+	
+
+</mapper>

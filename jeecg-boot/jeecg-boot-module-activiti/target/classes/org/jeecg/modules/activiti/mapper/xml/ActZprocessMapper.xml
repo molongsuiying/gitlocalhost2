@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.activiti.mapper.ActZprocessMapper">
+
+    <select id="selectZprocessList" resultType="org.jeecg.modules.activiti.entity.ActZprocess">
+
+        SELECT TOP ${pageSize} * FROM
+            (SELECT row_number() over(ORDER BY create_time DESC) AS rownumber,*
+                FROM act_z_process
+                WHERE business_table = #{tableName}
+                AND status = 1
+                <if test="name != '' and name != null">
+                    AND name LIKE CONCAT('%',#{name},'%')
+                </if>
+            ) AS temp_row
+        WHERE rownumber>((#{pageNo}-1)*#{pageSize})
+
+    </select>
+
+    <select id="countZprocess" resultType="int">
+        SELECT COUNT(*)
+        FROM act_z_process
+        WHERE business_table = #{tableName}
+        AND status = 1
+        <if test="name != '' and name != null">
+            AND name LIKE CONCAT('%',#{name},'%')
+        </if>
+    </select>
+</mapper>

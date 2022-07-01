@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.college.mapper.DepartmentMapper">
+
+    <resultMap id="departVo" type="org.jeecg.modules.college.vo.DepartVo">
+        <id property="id" column="id" />
+        <result property="collegeId" column="collegeId"/>
+        <result property="departmentCode" column="departmentCode"/>
+        <result property="departmentName" column="departmentName"/>
+        <result property="describe" column="describe"/>
+        <result property="buildTime" column="buildTime"/>
+        <result property="collegeName" column="collegeName"/>
+        <result property="sort" column="sort"/>
+
+        <association property="majorNum" column="id" select="org.jeecg.modules.college.mapper.MajorMapper.countMajorByDepartId"/>
+        <collection property="majorNames" column="id" select="org.jeecg.modules.college.mapper.MajorMapper.getMajorNamesByDepartId"/>
+    </resultMap>
+
+    <select id="queryList" resultMap="departVo">
+        <if test="pageSize != null and pageSize != '' ">
+            SELECT TOP ${pageSize} *
+        </if>
+        <if test="pageSize == null or pageSize == '' ">
+            SELECT TOP 100 PERCENT *
+        </if>
+        FROM (
+        SELECT row_number() over(ORDER BY d.sort,d.create_time ASC ) AS rownumber,d.id,c.id as collegeId,d.department_code as departmentCode,d.department_name as departmentName,
+        d.describe,d.build_time as buildTime,c.college_name as collegeName,d.sort
+        FROM zd_department d
+        LEFT JOIN zd_college c on c.id = d.college_id
+        WHERE 1 = 1
+        <if test="collegeId != null and collegeId != '' ">
+            AND d.college_id = #{collegeId}
+        </if>
+        <if test="departmentName != null and departmentName != '' ">
+            AND d.department_name LIKE CONCAT('%',#{departmentName},'%')
+        </if>
+        <if test="departmentCode != null and departmentCode != '' ">
+            AND d.department_code LIKE CONCAT('%',#{departmentCode},'%')
+        </if>
+        ) AS temp_row
+        <if test="pageSize != null and pageSize != '' ">
+            WHERE rownumber>((#{pageNo}-1) * #{pageSize})
+        </if>
+    </select>
+
+    <select id="countList" resultType="long">
+        SELECT COUNT(d.id)
+        FROM zd_department d
+        WHERE 1 = 1
+        <if test="collegeId != null and collegeId != '' ">
+            AND d.college_id = #{collegeId}
+        </if>
+        <if test="departmentName != null and departmentName != '' ">
+            AND d.department_name LIKE CONCAT('%',#{departmentName},'%')
+        </if>
+        <if test="departmentCode != null and departmentCode != '' ">
+            AND d.department_code LIKE CONCAT('%',#{departmentCode},'%')
+        </if>
+    </select>
+
+    <select id="countDepartmentByCollegeId" resultType="int">
+        SELECT COUNT(d.id)
+        FROM zd_department d
+        WHERE 1 = 1
+         AND d.college_id = #{id}
+    </select>
+
+    <select id="findListByCollegeId" resultMap="departVo">
+        SELECT row_number() over(ORDER BY d.sort,d.create_time ASC ) AS rownumber,d.id,c.id as collegeId,d.department_code as departmentCode,d.department_name as departmentName,
+        d.describe,d.build_time as buildTime,c.college_name as collegeName,c.id as collegeId,d.sort
+        FROM zd_department d
+        LEFT JOIN zd_college c on c.id = d.college_id
+        WHERE 1 = 1
+        AND d.college_id = #{collegeId}
+        ORDER BY d.sort
+    </select>
+</mapper>

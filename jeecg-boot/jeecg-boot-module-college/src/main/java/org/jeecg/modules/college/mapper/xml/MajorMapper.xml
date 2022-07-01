@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.college.mapper.MajorMapper">
+
+
+    <resultMap id="majorVo" type="org.jeecg.modules.college.vo.MajorVo">
+        <id property="id" column="id" />
+        <result property="majorName" column="majorName"/>
+        <association property="bunchNum" column="id" select="org.jeecg.modules.college.mapper.BunchMapper.countBunchByMajorId"/>
+
+    </resultMap>
+
+    <select id="queryList" resultType="org.jeecg.modules.college.vo.MajorVo">
+        SELECT TOP ${pageSize} *
+        FROM (
+        SELECT row_number() over(ORDER BY m.sort,m.create_time ASC ) AS rownumber,m.id,m.major_name as majorName,m.major_code as majorCode,d.department_name as departmentName,
+            m.describe,m.build_time as buildTime,c.college_name as collegeName,m.status,c.id as collegeId,d.id as departmentId
+        FROM zd_major m
+        LEFT JOIN zd_department d ON d.id = m.department_id
+        LEFT JOIN zd_college c on c.id = d.college_id
+        WHERE 1 = 1 AND d.id = #{departmentId}
+        <if test="collegeId != null and collegeId != '' ">
+            AND d.college_id = #{collegeId}
+        </if>
+        <if test="departmentName != null and departmentName != '' ">
+            AND d.department_name LIKE CONCAT('%',#{departmentName},'%')
+        </if>
+        <if test="majorName != null and majorName != '' ">
+            AND m.major_name LIKE CONCAT('%',#{majorName},'%')
+        </if>
+        <if test="majorCode != null and majorCode != '' ">
+            AND m.major_code LIKE CONCAT('%',#{majorCode},'%')
+        </if>
+        <if test="status != null and status != '' ">
+            AND m.status = #{status}
+        </if>
+        ) AS temp_row
+        WHERE rownumber>((#{pageNo}-1) * #{pageSize})
+    </select>
+
+    <select id="countList" resultType="long">
+        SELECT COUNT(m.id)
+        FROM zd_major m
+        LEFT JOIN zd_department d ON d.id = m.department_id
+        WHERE 1 = 1 AND d.id = #{departmentId}
+        <if test="collegeId != null and collegeId != '' ">
+            AND d.college_id = #{collegeId}
+        </if>
+        <if test="departmentName != null and departmentName != '' ">
+            AND d.department_name LIKE CONCAT('%',#{departmentName},'%')
+        </if>
+        <if test="majorName != null and majorName != '' ">
+            AND m.major_name LIKE CONCAT('%',#{majorName},'%')
+        </if>
+        <if test="majorCode != null and majorCode != '' ">
+            AND m.major_code LIKE CONCAT('%',#{majorCode},'%')
+        </if>
+        <if test="status != null and status != '' ">
+            AND m.status = #{status}
+        </if>
+    </select>
+
+    <select id="countMajorByDepartId" resultType="int">
+        SELECT COUNT(m.id)
+        FROM zd_major m
+        WHERE 1 = 1 AND m.department_id = #{id}
+    </select>
+
+    <select id="getMajorNamesByDepartId" resultType="String">
+        SELECT m.major_name
+        FROM zd_major m
+        WHERE 1 = 1 AND m.department_id = #{id}
+    </select>
+
+    <select id="findListByDepartmentId" resultMap="majorVo">
+        SELECT m.id,m.major_name as majorName,m.department_id as departmentId
+        FROM zd_major m
+        LEFT JOIN zd_department d on d.id = m.department_id
+        WHERE 1 = 1 AND d.id = #{departmentId}
+        ORDER BY m.sort
+    </select>
+
+    <select id="findNameById" resultType="String">
+        SELECT major_name as majorName
+        FROM zd_major
+        WHERE 1 = 1
+        AND id = #{id}
+    </select>
+
+    <select id="findIdByName" resultType="String">
+        SELECT id
+        FROM zd_major
+        WHERE 1 = 1
+        AND major_name = #{name}
+    </select>
+</mapper>

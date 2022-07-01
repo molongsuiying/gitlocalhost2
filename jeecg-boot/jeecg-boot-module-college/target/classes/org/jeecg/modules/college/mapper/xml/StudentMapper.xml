@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.college.mapper.StudentMapper">
+
+
+    <resultMap id="studentVo" type="org.jeecg.modules.college.vo.StudentVo">
+        <id property="id" column="id" />
+        <result property="studentName" column="student_name"/>
+        <result property="studentCode" column="student_code"/>
+        <result property="sex" column="sex"/>
+        <result property="birthday" column="birthday"/>
+        <result property="idCard" column="id_card"/>
+        <result property="height" column="height"/>
+        <result property="weight" column="weight"/>
+        <result property="mobile" column="mobile"/>
+        <result property="nativePlace" column="native_place"/>
+        <result property="nation" column="nation"/>
+        <result property="email" column="email"/>
+        <result property="icon" column="icon"/>
+        <result property="remarks" column="remarks"/>
+        <result property="areaLink" column="area_link"/>
+        <result property="address" column="address"/>
+        <result property="registeredResidence" column="registered_residence"/>
+        <result property="admissionTime" column="admission_time"/>
+
+        <result property="collegeId" column="college_id"/>
+        <result property="departmentId" column="department_id"/>
+        <result property="majorId" column="major_id"/>
+        <result property="bunchId" column="bunch_id"/>
+        <result property="collegeName" column="college_name"/>
+        <result property="departmentName" column="department_name"/>
+        <result property="majorName" column="major_name"/>
+        <result property="bunchName" column="bunch_name"/>
+
+    </resultMap>
+
+    <select id="duplicateCheck" resultType="int">
+        SELECT COUNT(s.id)
+        FROM zd_student s
+        WHERE 1 = 1
+        AND s.student_code = #{studentCode} AND s.bunch_id = #{bunchId} AND s.id != #{id}
+    </select>
+
+    <select id="queryList" resultMap="studentVo">
+        SELECT TOP ${pageSize} *
+        FROM (
+        SELECT row_number() over(ORDER BY s.sort,s.create_time ASC ) AS rownumber,s.id,s.student_name,s.student_code,s.sex,s.birthday,s.id_card,
+        s.height,s.weight,s.mobile,s.native_place,s.nation,s.email,s.icon,s.remarks,s.area_link,s.address,s.registered_residence,sc.admission_time,
+        sc.college_id,sc.department_id,sc.major_id,sc.bunch_id,c.college_name,d.department_name,m.major_name,b.bunch_name
+        FROM zd_student s
+        LEFT JOIN zd_student_college sc on sc.student_id = s.id
+        LEFT JOIN zd_bunch b on b.id = sc.bunch_id
+        LEFT JOIN zd_department d ON d.id = sc.department_id
+        LEFT JOIN zd_college c on c.id = sc.college_id
+        LEFT JOIN zd_major m on m.id = sc.major_id
+        WHERE 1 = 1
+        <if test="keyword != null and keyword != '' ">
+            AND s.student_name LIKE CONCAT('%',#{keyword},'%')
+        </if>
+        <if test="keyword != null and keyword != '' ">
+            AND s.student_code LIKE CONCAT('%',#{keyword},'%')
+        </if>
+        <if test="year != null and year != '' ">
+            AND sc.college_session = #{year}
+        </if>
+        <if test="bunchId != null and bunchId != '' ">
+            AND sc.bunch_id = #{bunchId}
+        </if>
+        <if test="majorId != null and majorId != '' ">
+            AND sc.major_id = #{majorId}
+        </if>
+        <if test="departmentId != null and departmentId != '' ">
+            AND sc.department_id = #{departmentId}
+        </if>
+        <if test="collegeId != null and collegeId != '' ">
+            AND sc.college_id = #{collegeId}
+        </if>
+        ) AS temp_row
+        WHERE rownumber>((#{pageNo}-1) * #{pageSize})
+    </select>
+
+    <select id="countList" resultType="long">
+        SELECT COUNT(s.id)
+        FROM zd_student s
+        LEFT JOIN zd_student_college sc on sc.student_id = s.id
+        LEFT JOIN zd_bunch b on b.id = sc.bunch_id
+        LEFT JOIN zd_department d ON d.id = sc.department_id
+        LEFT JOIN zd_college c on c.id = sc.college_id
+        LEFT JOIN zd_major m on m.id = sc.major_id
+        WHERE 1 = 1
+        <if test="keyword != null and keyword != '' ">
+            AND s.student_name LIKE CONCAT('%',#{keyword},'%')
+        </if>
+        <if test="keyword != null and keyword != '' ">
+            AND s.student_code LIKE CONCAT('%',#{keyword},'%')
+        </if>
+        <if test="year != null and year != '' ">
+            AND sc.college_session = #{year}
+        </if>
+        <if test="bunchId != null and bunchId != '' ">
+            AND sc.bunch_id = #{bunchId}
+        </if>
+        <if test="majorId != null and majorId != '' ">
+            AND sc.major_id = #{majorId}
+        </if>
+        <if test="departmentId != null and departmentId != '' ">
+            AND sc.department_id = #{departmentId}
+        </if>
+        <if test="collegeId != null and collegeId != '' ">
+            AND sc.college_id = #{collegeId}
+        </if>
+    </select>
+</mapper>

@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.college.mapper.HonourPersonMapper">
+
+
+    <resultMap id="honourPersonMap" type="org.jeecg.modules.college.entity.HonourPerson">
+
+        <id property="id" column="id" />
+        <result property="title" column="title"/>
+        <result property="leader" column="leader"/>
+        <result property="certificateType" column="certificate_type"/>
+        <result property="certificateTypeTxt" column="certificate_type_txt"/>
+        <result property="acquireUnit" column="acquire_unit"/>
+        <result property="acquireTime" column="acquire_time"/>
+        <result property="majorId" column="major_id"/>
+        <result property="status" column="status"/>
+        <result property="openShow" column="open_show"/>
+        <result property="remarks" column="remarks"/>
+        <result property="createTime" column="create_time"/>
+        <result property="createBy" column="create_by"/>
+        <result property="majorName" column="major_name"/>
+        <result property="teamPersons" column="team_persons"/>
+    </resultMap>
+
+
+    <select id="queryList" resultMap="honourPersonMap">
+        <if test="pageSize != null and pageSize != '' ">
+            SELECT TOP ${pageSize} *
+        </if>
+        <if test="pageSize == null or pageSize == '' ">
+            SELECT TOP 100 PERCENT *
+        </if>
+        FROM (
+        SELECT row_number() over(ORDER BY f.status ASC,f.create_time DESC ) AS rownumber,f.*,zm.major_name
+        FROM (
+        <choose>
+            <when test="create == 'create'">
+                <if test="examineAuth == true">
+                    SELECT hf.* FROM zd_honour_person hf WHERE create_by = #{createBy} AND status <![CDATA[< ]]> 1
+                    UNION ALL
+                    (
+                    SELECT zf.* FROM zd_honour_person zf
+                    LEFT JOIN sys_user u ON zf.create_by = u.username
+                    LEFT JOIN sys_user_depart ud ON ud.user_id  = u.id
+                    WHERE 1 = 1 AND zf.status <![CDATA[> ]]> 0
+                    AND ud.dep_id IN
+                    <foreach item="key" collection="departIds" open="(" separator="," close=")">
+                        #{key}
+                    </foreach>
+                    )
+                </if>
+                <if test="examineAuth == false">
+                    SELECT hf.* FROM zd_honour_person hf WHERE create_by = #{createBy} AND status <![CDATA[< ]]> 2
+                    UNION ALL
+                    (
+                    SELECT zf.* FROM zd_honour_person zf
+                    LEFT JOIN sys_user u ON zf.create_by = u.username
+                    LEFT JOIN sys_user_depart ud ON ud.user_id  = u.id
+                    WHERE 1 = 1 AND zf.status = 2
+                    AND ud.dep_id IN
+                    <foreach item="key" collection="departIds" open="(" separator="," close=")">
+                        #{key}
+                    </foreach>
+                    )
+                </if>
+                <if test="examineAuth == null">
+                    SELECT zf.* FROM zd_honour_person zf WHERE 1 = 1
+                </if>
+            </when>
+            <when test="create == 'upload'">
+                SELECT zf.* FROM zd_honour_person zf WHERE 1 = 1 AND create_by = #{createBy} AND status <![CDATA[< ]]> 1
+            </when>
+            <when test="create == 'examine'">
+                SELECT zf.* FROM zd_honour_person zf
+                LEFT JOIN sys_user u ON zf.create_by = u.username
+                LEFT JOIN sys_user_depart ud ON ud.user_id  = u.id
+                WHERE 1 = 1 AND zf.status <![CDATA[> ]]> 0
+                AND ud.dep_id IN
+                <foreach item="key" collection="departIds" open="(" separator="," close=")">
+                    #{key}
+                </foreach>
+            </when>
+            <otherwise>
+                SELECT zf.* FROM zd_honour_person zf WHERE 1 = 1 AND status = 2
+            </otherwise>
+        </choose>
+        ) f
+        LEFT JOIN zd_major zm on zm.id = f.major_id
+        WHERE 1 = 1
+        <if test="createBy != null and createBy != '' ">
+            AND f.create_by = #{createBy}
+        </if>
+        <if test="certificateType != null and certificateType != '' ">
+            AND f.certificate_type = #{certificateType}
+        </if>
+        <if test="acquireUnit != null and acquireUnit != '' ">
+            AND f.acquire_unit LIKE CONCAT('%',#{acquireUnit},'%')
+        </if>
+
+        <if test="hasAppendix != null and hasAppendix == 0">
+            AND f.appendix_ids IS NULL
+        </if>
+
+
+        <if test="status != null and status != '' ">
+            AND f.status = #{status}
+        </if>
+        <if test="nonSubmit != null and nonSubmit != '' ">
+            AND f.status <![CDATA[< ]]> #{nonSubmit}
+        </if>
+        <if test="majorId != null and majorId != '' ">
+            AND f.major_id = #{majorId}
+        </if>
+        <if test="beginTime != null and beginTime != '' ">
+            AND f.acquire_time  <![CDATA[>= ]]> #{beginTime}
+        </if>
+        <if test="endTime != null and endTime != '' ">
+            AND f.acquire_time <![CDATA[<= ]]> #{endTime}
+
+        </if>
+        <if test="title != null and title != '' ">
+            AND f.title LIKE CONCAT('%',#{title},'%')
+        </if>
+        <if test="leader != null and leader != '' ">
+            AND f.leader LIKE CONCAT('%',#{leader},'%')
+        </if>
+        <if test="teamPersons != null and teamPersons != '' ">
+            AND f.team_persons LIKE CONCAT('%',#{teamPersons},'%')
+        </if>
+        <if test="honourId != null and honourId != '' ">
+            AND f.id != #{honourId}
+        </if>
+        ) AS temp_row
+        <if test="pageSize != null and pageSize != '' ">
+            WHERE rownumber>((#{pageNo}-1) * #{pageSize})
+        </if>
+    </select>
+
+    <select id="findById" resultMap="honourPersonMap">
+        SELECT f.*,zm.major_name
+        FROM zd_honour_person f
+        LEFT JOIN zd_major zm on zm.id = f.major_id
+        WHERE 1 = 1
+        AND f.id = #{id}
+    </select>
+
+    <select id="queryListByIds" resultMap="honourPersonMap">
+        SELECT f.*,zm.major_name
+        FROM zd_honour_person f
+        LEFT JOIN zd_major zm on zm.id = f.major_id
+        WHERE 1 = 1
+        AND f.id in
+        <foreach item="key" collection="ids" open="(" separator="," close=")">
+            #{key}
+        </foreach>
+    </select>
+
+    <select id="countList" resultType="int">
+        SELECT COUNT(f.id)
+        FROM (
+        <choose>
+            <when test="create == 'create'">
+                <if test="examineAuth == true">
+                    SELECT hf.* FROM zd_honour_person hf WHERE create_by = #{createBy} AND status <![CDATA[< ]]> 1
+                    UNION ALL
+                    (
+                    SELECT zf.* FROM zd_honour_person zf
+                    LEFT JOIN sys_user u ON zf.create_by = u.username
+                    LEFT JOIN sys_user_depart ud ON ud.user_id  = u.id
+                    WHERE 1 = 1 AND zf.status <![CDATA[> ]]> 0
+                    AND ud.dep_id IN
+                    <foreach item="key" collection="departIds" open="(" separator="," close=")">
+                        #{key}
+                    </foreach>
+                    )
+                </if>
+                <if test="examineAuth == false">
+                    SELECT hf.* FROM zd_honour_person hf WHERE create_by = #{createBy} AND status <![CDATA[< ]]> 2
+                    UNION ALL
+                    (
+                    SELECT zf.* FROM zd_honour_person zf
+                    LEFT JOIN sys_user u ON zf.create_by = u.username
+                    LEFT JOIN sys_user_depart ud ON ud.user_id  = u.id
+                    WHERE 1 = 1 AND zf.status = 2
+                    AND ud.dep_id IN
+                    <foreach item="key" collection="departIds" open="(" separator="," close=")">
+                        #{key}
+                    </foreach>
+                    )
+                </if>
+                <if test="examineAuth == null">
+                    SELECT zf.* FROM zd_honour_person zf WHERE 1 = 1
+                </if>
+            </when>
+            <when test="create == 'upload'">
+                SELECT zf.* FROM zd_honour_person zf WHERE 1 = 1 AND create_by = #{createBy} AND status <![CDATA[< ]]> 1
+            </when>
+            <when test="create == 'examine'">
+                SELECT zf.* FROM zd_honour_person zf
+                LEFT JOIN sys_user u ON zf.create_by = u.username
+                LEFT JOIN sys_user_depart ud ON ud.user_id  = u.id
+                WHERE 1 = 1 AND zf.status <![CDATA[> ]]> 0
+                AND ud.dep_id IN
+                <foreach item="key" collection="departIds" open="(" separator="," close=")">
+                    #{key}
+                </foreach>
+            </when>
+            <otherwise>
+                SELECT zf.* FROM zd_honour_person zf WHERE 1 = 1 AND status = 2
+            </otherwise>
+        </choose>
+        ) f
+        WHERE 1 = 1
+        <if test="certificateType != null and certificateType != '' ">
+            AND f.certificate_type = #{certificateType}
+        </if>
+        <if test="acquireUnit != null and acquireUnit != '' ">
+            AND f.acquire_unit LIKE CONCAT('%',#{acquireUnit},'%')
+        </if>
+
+        <if test="hasAppendix != null and hasAppendix == 0">
+            AND f.appendix_ids IS NULL
+        </if>
+
+
+        <if test="status != null and status != '' ">
+            AND f.status = #{status}
+        </if>
+        <if test="nonSubmit != null and nonSubmit != '' ">
+            AND f.status <![CDATA[< ]]> #{nonSubmit}
+        </if>
+        <if test="beginTime != null and beginTime != '' ">
+            AND f.acquire_time  <![CDATA[>= ]]> #{beginTime}
+        </if>
+        <if test="endTime != null and endTime != '' ">
+            AND f.acquire_time <![CDATA[<= ]]> #{endTime}
+
+        </if>
+        <if test="majorId != null and majorId != '' ">
+            AND f.major_id = #{majorId}
+        </if>
+        <if test="title != null and title != '' ">
+            AND f.title LIKE CONCAT('%',#{title},'%')
+        </if>
+        <if test="leader != null and leader != '' ">
+            AND f.leader LIKE CONCAT('%',#{leader},'%')
+        </if>
+        <if test="teamPersons != null and teamPersons != '' ">
+            AND f.team_persons LIKE CONCAT('%',#{teamPersons},'%')
+        </if>
+        <if test="honourId != null and honourId != '' ">
+            AND f.id != #{honourId}
+        </if>
+    </select>
+
+    <update id="submitBatch">
+        UPDATE zd_honour_person
+        SET status = 1
+        WHERE 1 = 1
+        AND id in
+        <foreach item="key" collection="ids" open="(" separator="," close=")">
+            #{key}
+        </foreach>
+    </update>
+
+    <update id="passBatch">
+        UPDATE zd_honour_person
+        SET status = 2
+        WHERE 1 = 1
+        AND id in
+        <foreach item="key" collection="ids" open="(" separator="," close=")">
+            #{key}
+        </foreach>
+    </update>
+
+</mapper>

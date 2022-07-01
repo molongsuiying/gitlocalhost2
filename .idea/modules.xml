@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/gitlocalhost.iml" filepath="$PROJECT_DIR$/.idea/gitlocalhost.iml" />
+      <module fileurl="file://$PROJECT_DIR$/jeecg-boot/jeecg-boot-base-common/jeecg-boot-base-common.iml" filepath="$PROJECT_DIR$/jeecg-boot/jeecg-boot-base-common/jeecg-boot-base-common.iml" />
+      <module fileurl="file://$PROJECT_DIR$/jeecg-boot/jeecg-boot-module-activiti/jeecg-boot-module-activiti.iml" filepath="$PROJECT_DIR$/jeecg-boot/jeecg-boot-module-activiti/jeecg-boot-module-activiti.iml" />
+      <module fileurl="file://$PROJECT_DIR$/jeecg-boot/jeecg-boot-module-college/jeecg-boot-module-college.iml" filepath="$PROJECT_DIR$/jeecg-boot/jeecg-boot-module-college/jeecg-boot-module-college.iml" />
+      <module fileurl="file://$PROJECT_DIR$/jeecg-boot/jeecg-boot-module-system/jeecg-boot-module-system.iml" filepath="$PROJECT_DIR$/jeecg-boot/jeecg-boot-module-system/jeecg-boot-module-system.iml" />
+      <module fileurl="file://$PROJECT_DIR$/jeecg-boot/jeecg-boot-parent.iml" filepath="$PROJECT_DIR$/jeecg-boot/jeecg-boot-parent.iml" />
+    </modules>
+  </component>
+</project>

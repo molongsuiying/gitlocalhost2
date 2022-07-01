@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.college.mapper.BunchMapper">
+
+
+    <select id="countBunchByMajorId" resultType="int">
+        SELECT COUNT(b.id)
+        FROM zd_bunch b
+        WHERE 1 = 1
+        AND b.major_id = #{id}
+    </select>
+
+    <select id="findListByMajorId" resultType="org.jeecg.modules.college.vo.BunchVo">
+        SELECT b.id,b.bunch_name as bunchName,b.major_id as majorId,b.describe,b.sort,m.major_name as majorName
+        FROM zd_bunch b
+        LEFT JOIN zd_major m on m.id = b.major_id
+        WHERE 1 = 1
+        AND b.major_id = #{majorId}
+        ORDER BY b.sort
+    </select>
+
+</mapper>

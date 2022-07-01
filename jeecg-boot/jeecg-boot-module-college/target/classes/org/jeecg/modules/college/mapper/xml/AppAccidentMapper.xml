@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.college.mapper.AppAccidentMapper">
+
+
+    <resultMap id="AppAccident" type="org.jeecg.modules.college.entity.AppAccident">
+
+        <id property="id" column="id" />
+        <result property="title" column="title"/>
+        <result property="leader" column="leader"/>
+        <result property="articleNum" column="article_num"/>
+        <result property="authorityType" column="authority_type"/>
+        <result property="authorityTxt" column="authority_txt"/>
+        <result property="accidentType" column="accident_type"/>
+        <result property="accidentTypeTxt" column="accident_type_txt"/>
+        <result property="accidentLevel" column="accident_level"/>
+        <result property="accidentLevelTxt" column="accident_level_txt"/>
+        <result property="workName" column="work_name"/>
+        <result property="majorId" column="major_id"/>
+        <result property="acquireTime" column="acquire_time"/>
+        <result property="status" column="status"/>
+        <result property="remarks" column="remarks"/>
+        <result property="openShow" column="open_show"/>
+        <result property="createTime" column="create_time"/>
+        <result property="createBy" column="create_by"/>
+        <result property="majorName" column="major_name"/>
+        <result property="teamPersons" column="team_persons"/>
+    </resultMap>
+
+
+    <select id="queryList" resultMap="AppAccident">
+        select * from app_accident
+    </select>
+
+    <select id="countList" resultType="int">
+        SELECT COUNT(f.id) from app_accident
+    </select>
+
+    <select id="findById" resultMap="AppAccident">
+        SELECT *
+        FROM app_accident
+        WHERE 1 = 1
+        AND id = #{id}
+    </select>
+
+    <select id="queryListByIds" resultMap="AppAccident">
+        SELECT *
+        FROM app_accident
+        WHERE 1 = 1
+        AND f.id in
+        <foreach item="key" collection="ids" open="(" separator="," close=")">
+            #{key}
+        </foreach>
+    </select>
+
+    <update id="submitBatch">
+        UPDATE app_accident
+        SET status = 1
+        WHERE 1 = 1
+        AND id in
+        <foreach item="key" collection="ids" open="(" separator="," close=")">
+            #{key}
+        </foreach>
+    </update>
+
+    <update id="passBatch">
+        UPDATE app_accident
+        SET status = 2
+        WHERE 1 = 1
+        AND id in
+        <foreach item="key" collection="ids" open="(" separator="," close=")">
+            #{key}
+        </foreach>
+    </update>
+
+</mapper>

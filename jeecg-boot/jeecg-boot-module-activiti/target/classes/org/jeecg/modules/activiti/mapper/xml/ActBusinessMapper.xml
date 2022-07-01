@@ -1,0 +1,781 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.activiti.mapper.ActBusinessMapper">
+
+
+
+    <select id="getBusiDataList" resultType="map">
+        SELECT TOP ${pageSize} *
+        FROM (
+          SELECT row_number() over(ORDER BY begin_time DESC ) AS rownumber,*
+          FROM ${tableName}
+          WHERE  1 = 1
+          <if test="categoryId != null and categoryId != ''">
+            AND category_id = #{categoryId}
+          </if>
+          <if test="status != null and status != ''">
+              AND status = #{status}
+          </if>
+          <if test="name != null and name != ''">
+            AND name = #{name}
+          </if>
+          <if test="mobile != null and mobile != ''">
+            AND mobile = #{mobile}
+          </if>
+          ) AS temp_row
+        WHERE rownumber>((#{pageNo}-1) * #{pageSize})
+    </select>
+
+    <select id="countBusiDataList" resultType="int">
+        SELECT count(*) FROM ${tableName}
+        WHERE 1 = 1
+        <if test="categoryId != null and categoryId != ''">
+            AND category_id = #{categoryId}
+        </if>
+        <if test="status != null and status != ''">
+            AND status = #{status}
+        </if>
+        <if test="name != null and name != ''">
+            AND name = #{name}
+        </if>
+        <if test="mobile != null and mobile != ''">
+            AND mobile = #{mobile}
+        </if>
+    </select>
+
+    <insert id="saveBusinessExtra" parameterType="org.jeecg.modules.activiti.entity.ActBusinessExtra" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO act_z_business_extra(business_id,proc_inst_id,task_key,depart_code,user_ids,register_flag,proc_sort,speed_status,create_by,create_time)
+        VALUES (#{businessId},#{procInstId},#{taskKey},#{departCode},#{userIds},#{registerFlag},#{procSort},#{speedStatus},#{createBy},GETDATE())
+    </insert>
+
+    <select id="findBusinessExtraByBusinessId" resultType="org.jeecg.modules.activiti.entity.ActBusinessExtra">
+        SELECT TOP 1 * FROM act_z_business_extra
+        WHERE 1 = 1 AND del_flag = 0
+        AND business_id = #{businessId}
+        AND proc_sort = #{procSort}
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="findExtraByBusinessIdAndTaskKeyAndDepartCode" resultType="org.jeecg.modules.activiti.entity.ActBusinessExtra">
+        SELECT * FROM act_z_business_extra
+        WHERE 1 = 1 AND del_flag = 0
+        AND business_id = #{businessId}
+        AND task_key = #{taskKey}
+        <if test="departCode != null and departCode != ''">
+            AND depart_code = #{departCode}
+        </if>
+    </select>
+
+    <select id="findMaxSortByBusinessId" resultType="int">
+        SELECT max(proc_sort) FROM act_z_business_extra
+        WHERE 1 = 1 AND del_flag = 0
+        AND business_id = #{businessId}
+    </select>
+
+    <update id="updateBusinessExtra" parameterType="org.jeecg.modules.activiti.entity.ActBusinessExtra">
+        update act_z_business_extra
+        <set>
+            <if test="updateBy != null">update_by=#{updateBy},</if>
+            update_time=#{updateTime},
+            proc_inst_id=#{procInstId},
+            depart_code=#{departCode},
+            user_ids=#{userIds},
+            <if test="taskKey != null">task_key=#{taskKey},</if>
+            register_flag=#{registerFlag},
+            postpone_flag = #{postponeFlag},
+            proc_status = #{procStatus},
+            <if test="speedStatus != null">speed_status=#{speedStatus},</if>
+            proc_sort = #{procSort},
+        </set>
+        where id=#{id}
+    </update>
+
+
+    <insert id="saveBusinessPro" parameterType="org.jeecg.modules.activiti.entity.ActBusinessPro" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO act_z_business_pro(business_id,proc_inst_id,latest,create_by,create_time)
+        VALUES (#{businessId},#{procInstId},#{latest},#{createBy},GETDATE())
+    </insert>
+
+    <update id="updateBusinessPro">
+        UPDATE act_z_business_pro
+        SET latest = 0
+        WHERE business_id = #{businessId}
+    </update>
+
+    <insert id="saveBusinessVisit" parameterType="org.jeecg.modules.activiti.entity.ActBusinessVisit" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO act_z_business_visit(business_id,proc_inst_id,visitor,visit_time,visit_remark,visit_rank)
+        VALUES (#{businessId},#{procInstId},#{visitor},#{visitTime},#{visitRemark},#{visitRank})
+    </insert>
+
+    <select id="getVisitList" resultType="org.jeecg.modules.activiti.entity.ActBusinessVisit">
+        SELECT * FROM act_z_business_visit
+        WHERE proc_inst_id = #{procInstId}
+        ORDER BY visitor,visit_time DESC
+    </select>
+    
+    <update id="updateLatestVisit">
+        UPDATE act_z_business_visit set latest = 1
+        WHERE id = #{id}
+    </update>
+
+    <select id="selectProcDataTable" resultType="org.jeecg.modules.activiti.data.ProcDataVo">
+        SELECT e.depart_code as departCode,d.depart_name as departName,d.id AS departId,d.parent_id as parentId,temp.USER_ID_ as userId,
+         e.business_id as businessId,temp.status,temp.visit_flag as visitFlag,temp.postpone_flag as postponeFlag
+        FROM
+        (SELECT distinct business_id,depart_code
+            FROM act_z_business_extra
+            WHERE 1 = 1
+        ) as e
+        LEFT JOIN sys_depart d on d.org_code = e.depart_code COLLATE Chinese_PRC_CI_AS
+        RIGHT JOIN
+        (SELECT ADK.USER_ID_,adk.PROC_INST_ID_,P.business_id,b.status,b.visit_flag,b.postpone_flag
+        FROM ACT_HI_IDENTITYLINK ADK
+        LEFT JOIN act_z_business_pro P ON P.proc_inst_id = ADK.PROC_INST_ID_
+        LEFT JOIN act_z_business b on b.id = p.business_id
+        WHERE ADK.TYPE_ NOT IN ('candidate','starter','participant')
+        <if test="userId != '' and userId != null">
+            AND ADK.USER_ID_ = #{userId}
+        </if>
+        <if test="beginTime != '' and beginTime != null">
+            <![CDATA[ AND b.apply_time >= #{beginTime} ]]>
+        </if>
+        <if test="endTime != '' and endTime != null">
+            <![CDATA[ AND b.apply_time <= #{endTime} ]]>
+        </if>
+        ) as temp ON temp.business_id = e.business_id
+        WHERE 1 = 1
+        <if test="departCode != null and departCode != ''">
+            AND d.org_code = #{departCode}
+        </if>
+        <if test="departCodes != null  and departCodes.size()>0" >
+            AND d.org_code in
+            <foreach collection="departCodes" item="code" index="index" open="(" close=")" separator=",">
+                #{code}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="findReNumByBusinessId" resultType="int">
+        SELECT COUNT(*) FROM act_z_business_pro
+        WHERE 1 = 1
+        AND business_id = #{businessId}
+    </select>
+
+    <select id="findTotalBusinessNum" resultType="int">
+        SELECT COUNT(*) FROM act_z_business
+        WHERE 1 = 1
+    </select>
+
+    <select id="findDueByBusinessId" resultType="int">
+        SELECT COUNT(A.ID_) FROM (
+        SELECT * FROM ACT_HI_TASKINST
+        WHERE END_TIME_ IS NULL AND GETDATE() > DUE_DATE_
+        UNION ALL
+        SELECT * FROM ACT_HI_TASKINST
+        WHERE END_TIME_ IS NOT NULL
+        <![CDATA[ AND DUE_DATE_ < END_TIME_  ]]>
+        )as A
+        LEFT JOIN act_z_business_pro P ON P.proc_inst_id = A.PROC_INST_ID_
+        WHERE 1 = 1 AND P.business_id = #{businessId}
+    </select>
+
+    <select id="findMyBusinessIdNum" resultType="org.jeecg.modules.activiti.data.ActChartVo">
+        SELECT DISTINCT P.business_id as text,CONVERT(varchar(100), T.END_TIME_, 23)as time
+        FROM ACT_HI_IDENTITYLINK ADK
+				LEFT JOIN ACT_HI_TASKINST T ON T.ID_ = ADK.TASK_ID_
+        LEFT JOIN act_z_business_pro P ON P.proc_inst_id = ADK.PROC_INST_ID_
+        LEFT JOIN act_z_business b on b.id = p.business_id
+        WHERE ADK.TYPE_ NOT IN ('candidate','starter','participant')
+        AND T.END_TIME_ IS NOT NULL
+        <if test="userId != null and userId != ''">
+            AND ADK.USER_ID_ = #{userId}
+        </if>
+        <if test="beginTime != '' and beginTime != null">
+            <![CDATA[ AND T.START_TIME_ >= #{beginTime} ]]>
+        </if>
+        <if test="endTime != '' and endTime != null">
+            <![CDATA[ AND T.START_TIME_ <= #{endTime} ]]>
+        </if>
+    </select>
+
+    <select id="findNewBusinessNum" resultType="org.jeecg.modules.activiti.data.ActChartVo">
+        SELECT CONVERT(varchar(100), b.create_time, 23)as text,COUNT(b.id)as time
+        FROM act_z_business b
+        WHERE  1 = 1
+        <if test="afterTime != '' and afterTime != null">
+            <![CDATA[ AND b.create_time >= #{afterTime} ]]>
+        </if>
+        GROUP BY CONVERT(varchar(100), b.create_time, 23)
+    </select>
+
+    <select id="findNoHandleBusinessNum" resultType="org.jeecg.modules.activiti.data.ActChartVo">
+        SELECT CONVERT(varchar(100), c.create_time, 23)as text,COUNT(c.id)as time
+        FROM act_z_complain c
+        WHERE c.id NOT IN (SELECT b.table_id FROM act_z_business b)
+        <if test="afterTime != '' and afterTime != null">
+            <![CDATA[ AND c.create_time >= #{afterTime} ]]>
+        </if>
+        GROUP BY CONVERT(varchar(100), c.create_time, 23)
+
+    </select>
+
+
+
+
+    <insert id="saveTaskAway" parameterType="org.jeecg.modules.activiti.entity.ActHiTaskAway" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO ACT_HI_TASKINST_AWAY(business_id,task_id,task_time,create_by,create_time)
+        VALUES (#{businessId},#{taskId},#{taskTime},#{createBy},#{createTime})
+    </insert>
+
+    <select id="findTaskAway" resultType="org.jeecg.modules.activiti.entity.ActHiTaskAway">
+        SELECT * FROM ACT_HI_TASKINST_AWAY
+        WHERE 1 = 1
+        AND task_id = #{taskId}
+        AND business_id = #{businessId}
+        <if test="userId != null and userId != ''">
+            AND create_by = #{userId}
+        </if>
+    </select>
+
+    <select id="queryTaskAwayList" resultType="org.jeecg.modules.activiti.entity.ActHiTaskAway">
+        SELECT * FROM ACT_HI_TASKINST_AWAY
+        WHERE 1 = 1
+        create_by = #{userId}
+    </select>
+
+    <insert id="saveTaskSupervise" parameterType="org.jeecg.modules.activiti.entity.ActHiTaskSupervise" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO ACT_HI_TASKINST_SUPERVISE(business_id,task_id,supervise_user_id,old_due_time,now_due_time,create_by,create_time)
+        VALUES (#{businessId},#{taskId},#{superviseUserId},#{oldDueTime},#{nowDueTime},#{createBy},#{createTime})
+    </insert>
+
+    <!--个人操作查询-->
+
+    <select id="findBusinessOperationByUser" resultType="org.jeecg.modules.activiti.data.ActUserQueryData">
+            SELECT TOP ${pageSize} *
+            FROM (
+                SELECT row_number() over(ORDER BY TEMP.beginTime DESC ) AS rownumber,TEMP.*
+                FROM (
+                    SELECT  ADK.ID_ AS id, pst.NAME_ as name,adk.USER_ID_ as username,adk.TYPE_ as operaType,
+                    pst.START_TIME_ as beginTime,p.route_name as routeName,b.create_by as creator,b.table_id as tableId,b.table_name as tableName
+                    FROM ACT_HI_IDENTITYLINK ADK
+                    LEFT JOIN ACT_HI_PROCINST pst on pst.ID_ = adk.PROC_INST_ID_
+                    LEFT JOIN act_z_business b on b.id = pst.BUSINESS_KEY_
+                    LEFT JOIN act_z_process p on p.id = b.proc_def_id
+                    WHERE adk.TYPE_ = 'starter'
+
+                    UNION ALL
+
+                    SELECT  ADK.ID_ AS id, pst.NAME_ as name,adk.USER_ID_ as username,adk.TYPE_ as operaType,
+                    T.START_TIME_ as beginTime,p.route_name as routeName,b.create_by as creator,b.table_id as tableId,b.table_name as tableName
+                    FROM ACT_HI_IDENTITYLINK ADK
+                    LEFT JOIN ACT_HI_TASKINST T on T.ID_ = adk.TASK_ID_
+                    LEFT JOIN ACT_HI_PROCINST pst on pst.ID_ = adk.PROC_INST_ID_
+                    LEFT JOIN act_z_business b on b.id = pst.BUSINESS_KEY_
+                    LEFT JOIN act_z_process p on p.id = b.proc_def_id
+                    WHERE adk.TYPE_ != 'starter' AND adk.TYPE_ != 'candidate' AND  adk.TYPE_ != 'participant'
+                  )AS  TEMP
+                    WHERE 1 = 1
+                    AND TEMP.username = #{username}
+                    <if test="operaType != '' and operaType != null">
+                        <![CDATA[ AND TEMP.operaType = #{operaType} ]]>
+                    </if>
+
+                    <if test="beginTime != '' and beginTime != null">
+                        <![CDATA[ AND TEMP.beginTime >= #{beginTime} ]]>
+                    </if>
+                    <if test="endTime != '' and endTime != null">
+                        <![CDATA[ AND TEMP.beginTime <= #{endTime} ]]>
+                    </if>
+                    <if test="name != '' and name != null">
+                        AND TEMP.name like concat('%',#{name},'%')
+                    </if>
+            ) AS temp_row
+            WHERE rownumber > ((#{pageNo}-1) * #{pageSize})
+    </select>
+
+    <select id="findTotalBusinessOperationByUser" resultType="long">
+        SELECT count(TEMP.id) FROM (
+        SELECT  ADK.ID_ AS id, pst.NAME_ as name,adk.USER_ID_ as username,adk.TYPE_ as operaType,
+        pst.START_TIME_ as beginTime,p.route_name as routeName,b.create_by as creator,b.table_id as tableId,b.table_name as tableName
+        FROM ACT_HI_IDENTITYLINK ADK
+        LEFT JOIN ACT_HI_PROCINST pst on pst.ID_ = adk.PROC_INST_ID_
+        LEFT JOIN act_z_business b on b.id = pst.BUSINESS_KEY_
+        LEFT JOIN act_z_process p on p.id = b.proc_def_id
+        WHERE adk.TYPE_ = 'starter'
+
+        UNION ALL
+        SELECT  ADK.ID_ AS id, pst.NAME_ as name,adk.USER_ID_ as username,adk.TYPE_ as operaType,
+        T.START_TIME_ as beginTime,p.route_name as routeName,b.create_by as creator,b.table_id as tableId,b.table_name as tableName
+        FROM ACT_HI_IDENTITYLINK ADK
+        LEFT JOIN ACT_HI_TASKINST T on T.ID_ = adk.TASK_ID_
+        LEFT JOIN ACT_HI_PROCINST pst on pst.ID_ = adk.PROC_INST_ID_
+        LEFT JOIN act_z_business b on b.id = pst.BUSINESS_KEY_
+        LEFT JOIN act_z_process p on p.id = b.proc_def_id
+        WHERE adk.TYPE_ != 'starter' AND adk.TYPE_ != 'candidate' AND  adk.TYPE_ != 'participant'
+        )AS  TEMP
+        WHERE 1 = 1
+        AND TEMP.username = #{username}
+        <if test="operaType != '' and operaType != null">
+            <![CDATA[ AND TEMP.operaType = #{operaType} ]]>
+        </if>
+        <if test="beginTime != '' and beginTime != null">
+            <![CDATA[ AND TEMP.beginTime >= #{beginTime} ]]>
+        </if>
+        <if test="endTime != '' and endTime != null">
+            <![CDATA[ AND TEMP.beginTime <= #{endTime} ]]>
+        </if>
+        <if test="name != '' and name != null">
+            AND TEMP.name like concat('%',#{name},'%')
+        </if>
+    </select>
+
+
+
+    <!--单位量化统计-->
+
+    <select id="findSuperviseByDepart" resultType="int">
+        SELECT COUNT(s.id) FROM ACT_HI_TASKINST_SUPERVISE s
+        LEFT JOIN ACT_HI_TASKINST T ON T.ID_ = S.task_id
+        LEFT JOIN sys_user u on u.username = s.supervise_user_id  COLLATE Chinese_PRC_CI_AS
+        LEFT JOIN sys_user_depart ud on ud.user_id = u.id  COLLATE Chinese_PRC_CI_AS
+        RIGHT JOIN sys_depart d on d.id = ud.dep_id
+        WHERE 1 = 1
+        <if test="departCode != '' and departCode != null">
+            AND d.org_code = #{departCode}
+        </if>
+        <if test="departId != '' and departId != null">
+            AND d.org_code in (SELECT org_code FROM sys_depart WHERE parent_id = #{departId} or id = #{departId})
+        </if>
+
+        <if test="beginTime != '' and beginTime != null">
+            <![CDATA[ AND T.START_TIME_ >= #{beginTime} ]]>
+        </if>
+        <if test="endTime != '' and endTime != null">
+            <![CDATA[ AND T.START_TIME_ <= #{endTime} ]]>
+        </if>
+    </select>
+    
+    <select id="findHandleNumByDepart" resultType="int">
+        SELECT COUNT (DISTINCT P.business_id)
+        FROM ACT_HI_IDENTITYLINK ADK
+        LEFT JOIN ACT_HI_TASKINST T ON T.PROC_INST_ID_ = ADK.PROC_INST_ID_
+        LEFT JOIN act_z_business_pro P ON P.proc_inst_id = ADK.PROC_INST_ID_
+        LEFT JOIN act_z_business b on b.id = p.business_id
+        LEFT JOIN sys_user u on u.username = ADK.USER_ID_  COLLATE Chinese_PRC_CI_AS
+        LEFT JOIN sys_user_depart ud on ud.user_id = u.id  COLLATE Chinese_PRC_CI_AS
+        RIGHT JOIN sys_depart d on d.id = ud.dep_id
+        WHERE ADK.TYPE_ NOT IN ('candidate','starter','participant')
+        <if test="departCode != '' and departCode != null">
+            AND d.org_code = #{departCode}
+        </if>
+        <if test="departId != '' and departId != null">
+            AND d.org_code in (SELECT org_code FROM sys_depart WHERE parent_id = #{departId} or id = #{departId})
+        </if>
+        <if test="beginTime != '' and beginTime != null">
+            <![CDATA[ AND T.START_TIME_ >= #{beginTime} ]]>
+        </if>
+        <if test="endTime != '' and endTime != null">
+            <![CDATA[ AND T.START_TIME_ <= #{endTime} ]]>
+        </if>
+    </select>
+
+    <select id="findAwayNumByDepart" resultType="int">
+        SELECT COUNT (DISTINCT P.business_id)
+        FROM ACT_HI_IDENTITYLINK ADK
+        LEFT JOIN ACT_HI_TASKINST T ON T.PROC_INST_ID_ = ADK.PROC_INST_ID_
+        LEFT JOIN act_z_business_pro P ON P.proc_inst_id = ADK.PROC_INST_ID_
+        LEFT JOIN act_z_business b on b.id = p.business_id
+        LEFT JOIN sys_user u on u.username = ADK.USER_ID_  COLLATE Chinese_PRC_CI_AS
+        LEFT JOIN sys_user_depart ud on ud.user_id = u.id  COLLATE Chinese_PRC_CI_AS
+        RIGHT JOIN sys_depart d on d.id = ud.dep_id
+        LEFT JOIN ACT_HI_TASKINST_AWAY AWAY ON AWAY.business_id = p.business_id
+        WHERE ADK.TYPE_ NOT IN ('candidate','starter','participant')
+        <if test="departCode != '' and departCode != null">
+            AND d.org_code = #{departCode}
+        </if>
+        <if test="departId != '' and departId != null">
+            AND d.org_code in (SELECT org_code FROM sys_depart WHERE parent_id = #{departId} or id = #{departId})
+        </if>
+        <if test="beginTime != '' and beginTime != null">
+            <![CDATA[ AND T.START_TIME_ >= #{beginTime} ]]>
+        </if>
+        <if test="endTime != '' and endTime != null">
+            <![CDATA[ AND T.START_TIME_ <= #{endTime} ]]>
+        </if>
+        <if test="awayTime != '' and awayTime != null">
+            <![CDATA[ AND AWAY.task_time <=  DATEADD(dd,#{awayTime},T.START_TIME_) ]]>
+        </if>
+    </select>
+
+    <select id="findPostponeNumByDepart" resultType="int">
+        SELECT COUNT (DISTINCT P.business_id)
+        FROM ACT_HI_IDENTITYLINK ADK
+        LEFT JOIN ACT_HI_TASKINST T ON T.PROC_INST_ID_ = ADK.PROC_INST_ID_
+        LEFT JOIN act_z_business_pro P ON P.proc_inst_id = ADK.PROC_INST_ID_
+        LEFT JOIN act_z_business b on b.id = p.business_id
+        LEFT JOIN sys_user u on u.username = ADK.USER_ID_  COLLATE Chinese_PRC_CI_AS
+        LEFT JOIN sys_user_depart ud on ud.user_id = u.id  COLLATE Chinese_PRC_CI_AS
+        RIGHT JOIN sys_depart d on d.id = ud.dep_id
+        WHERE ADK.TYPE_ = 'postpone'
+        <if test="departCode != '' and departCode != null">
+            AND d.org_code = #{departCode}
+        </if>
+        <if test="departId != '' and departId != null">
+            AND d.org_code in (SELECT org_code FROM sys_depart WHERE parent_id = #{departId} or id = #{departId})
+        </if>
+        <if test="beginTime != '' and beginTime != null">
+            <![CDATA[ AND T.START_TIME_ >= #{beginTime} ]]>
+        </if>
+        <if test="endTime != '' and endTime != null">
+            <![CDATA[ AND T.START_TIME_ <= #{endTime} ]]>
+        </if>
+    </select>
+
+    <select id="findDueNumByDepart" resultType="int">
+        SELECT COUNT (DISTINCT P.business_id)
+        FROM ACT_HI_IDENTITYLINK ADK
+        LEFT JOIN ACT_HI_TASKINST T ON T.PROC_INST_ID_ = ADK.PROC_INST_ID_
+        LEFT JOIN act_z_business_pro P ON P.proc_inst_id = ADK.PROC_INST_ID_
+        LEFT JOIN act_z_business b on b.id = p.business_id
+        LEFT JOIN sys_user u on u.username = ADK.USER_ID_  COLLATE Chinese_PRC_CI_AS
+        LEFT JOIN sys_user_depart ud on ud.user_id = u.id  COLLATE Chinese_PRC_CI_AS
+        RIGHT JOIN sys_depart d on d.id = ud.dep_id
+        WHERE 1 = 1
+        <if test="departCode != '' and departCode != null">
+            AND d.org_code = #{departCode}
+        </if>
+        <if test="departId != '' and departId != null">
+            AND d.org_code in (SELECT org_code FROM sys_depart WHERE parent_id = #{departId} or id = #{departId})
+        </if>
+        <![CDATA[ AND T.DUE_DATE_ < T.END_TIME_ ]]>
+        <if test="beginTime != '' and beginTime != null">
+            <![CDATA[ AND T.START_TIME_ >= #{beginTime} ]]>
+        </if>
+        <if test="endTime != '' and endTime != null">
+            <![CDATA[ AND T.START_TIME_ <= #{endTime} ]]>
+        </if>
+    </select>
+
+    <select id="findReNumByDepart" resultType="int">
+        SELECT COUNT (DISTINCT P.business_id)
+        FROM ACT_HI_IDENTITYLINK ADK
+        LEFT JOIN ACT_HI_TASKINST T ON T.PROC_INST_ID_ = ADK.PROC_INST_ID_
+        LEFT JOIN act_z_business_pro P ON P.proc_inst_id = ADK.PROC_INST_ID_
+        LEFT JOIN act_z_business b on b.id = p.business_id
+        LEFT JOIN sys_user u on u.username = ADK.USER_ID_  COLLATE Chinese_PRC_CI_AS
+        LEFT JOIN sys_user_depart ud on ud.user_id = u.id  COLLATE Chinese_PRC_CI_AS
+        RIGHT JOIN sys_depart d on d.id = ud.dep_id
+        LEFT JOIN act_z_business_pro pro on pro.business_id = p.business_id
+        WHERE 1 = 1
+        <if test="departCode != '' and departCode != null">
+            AND d.org_code = #{departCode}
+        </if>
+        <if test="departId != '' and departId != null">
+            AND d.org_code in (SELECT org_code FROM sys_depart WHERE parent_id = #{departId} or id = #{departId})
+        </if>
+        AND pro.latest = 0
+        <if test="beginTime != '' and beginTime != null">
+            <![CDATA[ AND T.START_TIME_ >= #{beginTime} ]]>
+        </if>
+        <if test="endTime != '' and endTime != null">
+            <![CDATA[ AND T.START_TIME_ <= #{endTime} ]]>
+        </if>
+    </select>
+
+    <select id="findRefuseNumByDepart" resultType="int">
+        SELECT COUNT (DISTINCT P.business_id)
+        FROM ACT_HI_IDENTITYLINK ADK
+        LEFT JOIN ACT_HI_TASKINST T ON T.PROC_INST_ID_ = ADK.PROC_INST_ID_
+        LEFT JOIN act_z_business_pro P ON P.proc_inst_id = ADK.PROC_INST_ID_
+        LEFT JOIN act_z_business b on b.id = p.business_id
+        LEFT JOIN sys_user u on u.username = ADK.USER_ID_  COLLATE Chinese_PRC_CI_AS
+        LEFT JOIN sys_user_depart ud on ud.user_id = u.id  COLLATE Chinese_PRC_CI_AS
+        RIGHT JOIN sys_depart d on d.id = ud.dep_id
+        WHERE 1 = 1
+        <if test="departCode != '' and departCode != null">
+            AND d.org_code = #{departCode}
+        </if>
+        <if test="departId != '' and departId != null">
+            AND d.org_code in (SELECT org_code FROM sys_depart WHERE parent_id = #{departId} or id = #{departId})
+        </if>
+        <if test="operaType != '' and operaType != null">
+            AND ADK.TYPE_ = #{operaType}
+        </if>
+
+        <if test="beginTime != '' and beginTime != null">
+            <![CDATA[ AND T.START_TIME_ >= #{beginTime} ]]>
+        </if>
+        <if test="endTime != '' and endTime != null">
+            <![CDATA[ AND T.START_TIME_ <= #{endTime} ]]>
+        </if>
+    </select>
+
+    <select id="findAvgHandleTimeByDepart" resultType="int">
+        SELECT  ISNULL( cast(AVG(temp.DURATION_) as int) , 0 )
+        FROM(
+            SELECT  DISTINCT t.DURATION_, P.business_id
+            FROM ACT_HI_IDENTITYLINK ADK
+            LEFT JOIN ACT_HI_TASKINST T ON T.PROC_INST_ID_ = ADK.PROC_INST_ID_
+            LEFT JOIN act_z_business_pro P ON P.proc_inst_id = ADK.PROC_INST_ID_
+            LEFT JOIN act_z_business b on b.id = p.business_id
+            LEFT JOIN sys_user u on u.username = ADK.USER_ID_  COLLATE Chinese_PRC_CI_AS
+            LEFT JOIN sys_user_depart ud on ud.user_id = u.id  COLLATE Chinese_PRC_CI_AS
+            RIGHT JOIN sys_depart d on d.id = ud.dep_id
+            WHERE 1 = 1 AND T.DURATION_ IS NOT NULL
+            <if test="departCode != '' and departCode != null">
+                AND d.org_code = #{departCode}
+            </if>
+            <if test="departId != '' and departId != null">
+                AND d.org_code in (SELECT org_code FROM sys_depart WHERE parent_id = #{departId} or id = #{departId})
+            </if>
+            <if test="beginTime != '' and beginTime != null">
+                <![CDATA[ AND T.START_TIME_ >= #{beginTime} ]]>
+            </if>
+            <if test="endTime != '' and endTime != null">
+                <![CDATA[ AND T.START_TIME_ <= #{endTime} ]]>
+            </if>
+        )as temp
+    </select>
+
+    <select id="findAvgAwayTimeByDepart" resultType="int">
+        SELECT ISNULL(AVG(DATEDIFF( Second, a.task_time,a.create_time)),0)
+        FROM ACT_HI_TASKINST_AWAY A
+        LEFT JOIN sys_user u on u.username = A.create_by  COLLATE Chinese_PRC_CI_AS
+        LEFT JOIN sys_user_depart ud on ud.user_id = u.id  COLLATE Chinese_PRC_CI_AS
+        RIGHT JOIN sys_depart d on d.id = ud.dep_id
+        <if test="departCode != '' and departCode != null">
+            AND d.org_code = #{departCode}
+        </if>
+        <if test="departId != '' and departId != null">
+            AND d.org_code in (SELECT org_code FROM sys_depart WHERE parent_id = #{departId} or id = #{departId})
+        </if>
+        <if test="beginTime != '' and beginTime != null">
+            <![CDATA[ AND a.task_time >= #{beginTime} ]]>
+        </if>
+        <if test="endTime != '' and endTime != null">
+            <![CDATA[ AND a.task_time <= #{endTime} ]]>
+        </if>
+    </select>
+
+    <select id="findTodoNumByDepart" resultType="int">
+        SELECT COUNT (DISTINCT T.ID_)
+        FROM ACT_HI_TASKINST T
+        LEFT JOIN ACT_HI_IDENTITYLINK ADK ON ADK.TASK_ID_ = T.ID_
+        LEFT JOIN sys_user u on u.username = ADK.USER_ID_  COLLATE Chinese_PRC_CI_AS
+        RIGHT JOIN sys_depart d on d.org_code = u.org_code
+        WHERE 1 = 1 AND T.DELETE_REASON_ IS NULL
+        <if test="departCode != '' and departCode != null">
+            AND d.org_code = #{departCode}
+        </if>
+        <if test="departId != '' and departId != null">
+            AND d.org_code in (SELECT org_code FROM sys_depart WHERE parent_id = #{departId} or id = #{departId})
+        </if>
+        <if test="beginTime != '' and beginTime != null">
+            <![CDATA[ AND T.START_TIME_ >= #{beginTime} ]]>
+        </if>
+        <if test="endTime != '' and endTime != null">
+            <![CDATA[ AND T.START_TIME_ <= #{endTime} ]]>
+        </if>
+        AND T.ID_ NOT IN (
+            SELECT away.task_id FROM ACT_HI_TASKINST_AWAY away
+            LEFT JOIN sys_user u on u.username = away.create_by  COLLATE Chinese_PRC_CI_AS
+            AND u.org_code = #{departCode}
+        )
+    </select>
+
+    <select id="findNormalNumByDepart" resultType="int">
+        SELECT COUNT (DISTINCT P.business_id)
+        FROM ACT_HI_IDENTITYLINK ADK
+        LEFT JOIN ACT_HI_TASKINST T ON T.PROC_INST_ID_ = ADK.PROC_INST_ID_
+        LEFT JOIN act_z_business_pro P ON P.proc_inst_id = ADK.PROC_INST_ID_
+        LEFT JOIN act_z_business b on b.id = p.business_id
+        LEFT JOIN sys_user u on u.username = ADK.USER_ID_  COLLATE Chinese_PRC_CI_AS
+        LEFT JOIN sys_user_depart ud on ud.user_id = u.id  COLLATE Chinese_PRC_CI_AS
+        RIGHT JOIN sys_depart d on d.id = ud.dep_id
+        WHERE ADK.TYPE_ NOT IN ('candidate','starter','participant')
+        AND postpone_flag = 0
+        <if test="visitFlag != '' and visitFlag != null">
+            AND b.visit_flag = #{visitFlag}
+        </if>
+        AND T.DUE_DATE_ >= T.END_TIME_
+        <if test="departCode != '' and departCode != null">
+            AND d.org_code = #{departCode}
+        </if>
+        <if test="departId != '' and departId != null">
+            AND d.org_code in (SELECT org_code FROM sys_depart WHERE parent_id = #{departId} or id = #{departId})
+        </if>
+        <if test="beginTime != '' and beginTime != null">
+            <![CDATA[ AND T.START_TIME_ >= #{beginTime} ]]>
+        </if>
+        <if test="endTime != '' and endTime != null">
+            <![CDATA[ AND T.START_TIME_ <= #{endTime} ]]>
+        </if>
+    </select>
+
+    <select id="findUnderNumByDepart" resultType="int">
+        SELECT COUNT (DISTINCT extra.business_id)
+        FROM act_z_business_extra extra
+        LEFT JOIN ACT_HI_TASKINST T ON T.TASK_DEF_KEY_ = extra.task_key
+        WHERE 1 =1 AND extra.depart_code COLLATE Chinese_PRC_CI_AS in (SELECT org_code FROM sys_depart WHERE parent_id = #{departId})
+        <if test="beginTime != '' and beginTime != null">
+            <![CDATA[ AND T.START_TIME_ >= #{beginTime} ]]>
+        </if>
+        <if test="endTime != '' and endTime != null">
+            <![CDATA[ AND T.START_TIME_ <= #{endTime} ]]>
+        </if>
+    </select>
+
+    <select id="findApplyUserFormVo" resultType="org.jeecg.modules.activiti.entity.ActApplyUserFormVo">
+        SELECT  b.table_name as tableName,B.table_id as tableId,ISNULL(B.visit_flag,0) as visitFlag,v.visit_time as visitTime,
+          V.visit_remark as visitRemark,p.route_name,ISNULL(B.complain_flag,0) as complainFlag,
+          b.complain_remark as complainRemark ,b.complain_rank as complainRank,b.complain_time as complainTime
+        FROM act_z_business B
+        LEFT  JOIN  (SELECT * FROM act_z_business_visit WHERE latest = 1)  V ON V.business_id = B.id
+        LEFT JOIN act_z_process P ON P.id = b.proc_def_id
+    </select>
+
+    <!--调度中心统计-->
+
+    <!--实时分配工单量-->
+    <select id="findDoneNumByCenterGroupUser" resultType="org.jeecg.modules.activiti.data.ActCenterData">
+        SELECT u.id,apply_by as username,COUNT(b.id)as doneNum  FROM act_z_business b
+        LEFT JOIN sys_user u ON u.username = B.apply_by COLLATE Chinese_PRC_CI_AS
+        LEFT JOIN sys_user_role ur on u.id = ur.user_id
+        LEFT JOIN sys_role r ON r.id = ur.role_id
+        WHERE 1 = 1 AND b.status != 0 AND r.role_code like concat('%',#{roleCode},'%')
+        <if test="beginTime != '' and beginTime != null">
+            <![CDATA[ AND b.create_by >= #{beginTime} ]]>
+        </if>
+        <if test="endTime != '' and endTime != null">
+            <![CDATA[ AND b.create_by <= #{endTime} ]]>
+        </if>
+        GROUP BY u.id,apply_by
+    </select>
+
+    <select id="findTodoNumByCenter" resultType="int">
+        SELECT COUNT(id) FROM act_z_business b
+        WHERE 1 = 1 AND status = 0
+        <if test="beginTime != '' and beginTime != null">
+            <![CDATA[ AND b.create_by >= #{beginTime} ]]>
+        </if>
+        <if test="endTime != '' and endTime != null">
+            <![CDATA[ AND b.create_by <= #{endTime} ]]>
+        </if>
+    </select>
+
+    <select id="findRefuseNumByCenter" resultType="int">
+        SELECT COUNT(id) FROM act_z_business b
+        WHERE 1 = 1 AND status = 3
+        AND apply_by = #{applyBy}
+        <if test="beginTime != '' and beginTime != null">
+            <![CDATA[ AND b.create_by >= #{beginTime} ]]>
+        </if>
+        <if test="endTime != '' and endTime != null">
+            <![CDATA[ AND b.create_by <= #{endTime} ]]>
+        </if>
+    </select>
+
+    <select id="findRefusedNumByCenter" resultType="int">
+        SELECT COUNT(id) FROM act_z_business b
+        WHERE 1 = 1 AND status = 2 and result = 3
+        AND apply_by = #{applyBy}
+        <if test="beginTime != '' and beginTime != null">
+            <![CDATA[ AND b.create_by >= #{beginTime} ]]>
+        </if>
+        <if test="endTime != '' and endTime != null">
+            <![CDATA[ AND b.create_by <= #{endTime} ]]>
+        </if>
+    </select>
+
+    <select id="findAvgTimeByCenter" resultType="org.jeecg.modules.activiti.data.ActChartVo">
+        SELECT COUNT(T.ID_) as text ,SUM(t.DURATION_) as time
+        FROM ACT_HI_TASKINST T
+        LEFT JOIN act_z_business_pro pro on pro.proc_inst_id = t.PROC_INST_ID_
+        LEFT JOIN act_z_business b on b.id = pro.business_id
+        WHERE 1 = 1 AND t.DURATION_ is NOT null
+        AND b.apply_by = #{applyBy}
+        <if test="beginTime != '' and beginTime != null">
+            <![CDATA[ AND b.create_by >= #{beginTime} ]]>
+        </if>
+        <if test="endTime != '' and endTime != null">
+            <![CDATA[ AND b.create_by <= #{endTime} ]]>
+        </if>
+    </select>
+
+    <select id="findPassNumByCenter" resultType="int">
+        SELECT COUNT(id) FROM act_z_business b
+        WHERE 1 = 1
+        <![CDATA[ AND DATEDIFF( Second, create_time,apply_time) < #{passTime} ]]>
+        AND apply_by = #{applyBy}
+        <if test="beginTime != '' and beginTime != null">
+            <![CDATA[ AND b.create_by >= #{beginTime} ]]>
+        </if>
+        <if test="endTime != '' and endTime != null">
+            <![CDATA[ AND b.create_by <= #{endTime} ]]>
+        </if>
+    </select>
+
+
+    <!--回访统计-->
+
+    <select id="findNoVisitNum" resultType="int">
+        SELECT COUNT(*) FROM  act_z_business
+        WHERE  visit_flag != 1 AND  status = 2
+    </select>
+    <select id="findVisitData" resultType="org.jeecg.modules.activiti.data.ActVisitData">
+        SELECT v.visitor as username,COUNT(DISTINCT v.business_id)as visitBusinessNum,COUNT(v.id) as visitNum
+        FROM act_z_business_visit v
+
+        WHERE 1 = 1
+        <if test="beginTime != '' and beginTime != null">
+            <![CDATA[ AND v.visit_time >= #{beginTime} ]]>
+        </if>
+        <if test="endTime != '' and endTime != null">
+            <![CDATA[ AND v.visit_time <= #{endTime} ]]>
+        </if>
+        GROUP BY v.visitor
+    </select>
+
+    <select id="findReVisitNumByUser" resultType="int">
+        SELECT COUNT(DISTINCT  v.business_id)
+        FROM act_z_business_visit v
+        WHERE 1 = 1
+        AND v.latest = 0
+        AND visitor = #{visitor}
+        <if test="beginTime != '' and beginTime != null">
+            <![CDATA[ AND v.visit_time >= #{beginTime} ]]>
+        </if>
+        <if test="endTime != '' and endTime != null">
+            <![CDATA[ AND v.visit_time <= #{endTime} ]]>
+        </if>
+    </select>
+
+    <select id="findAvgTimeByUser" resultType="org.jeecg.modules.activiti.data.ActChartVo">
+        SELECT v.business_id as text ,DATEDIFF( Second,ranked.END_TIME_, v.visit_time) as time  FROM( SELECT PROC_INST_ID_,END_TIME_, ROW_NUMBER()  OVER(partition BY PROC_INST_ID_ ORDER BY END_TIME_ DESC) AS rowNum
+        FROM ACT_HI_TASKINST ) ranked
+        RIGHT JOIN act_z_business_visit v on v.proc_inst_id = ranked.PROC_INST_ID_
+        WHERE 1 = 1
+        <![CDATA[ AND ranked.rowNum <= 1 ]]>
+        AND v.visitor = #{visitor}
+        <if test="beginTime != '' and beginTime != null">
+            <![CDATA[ AND v.visit_time >= #{beginTime} ]]>
+        </if>
+        <if test="endTime != '' and endTime != null">
+            <![CDATA[ AND v.visit_time <= #{endTime} ]]>
+        </if>
+        ORDER BY ranked.PROC_INST_ID_, ranked.END_TIME_ DESC
+    </select>
+
+    <select id="findVisitRank" resultType="org.jeecg.modules.activiti.data.ActRankData">
+        SELECT visit_rank as rank,COUNT(v.visit_rank) as num
+        FROM act_z_business_visit v
+        WHERE 1 = 1 AND latest = 1
+        GROUP BY visit_rank
+    </select>
+
+    <select id="findBusinessStatusList" resultType="org.jeecg.modules.activiti.data.ActChartVo">
+        SELECT d.item_text as text ,p.status as time
+        FROM act_z_complain p
+        LEFT JOIN sys_dict_item d on d.item_value = p.category_id COLLATE Chinese_PRC_CI_AS
+    </select>
+</mapper>

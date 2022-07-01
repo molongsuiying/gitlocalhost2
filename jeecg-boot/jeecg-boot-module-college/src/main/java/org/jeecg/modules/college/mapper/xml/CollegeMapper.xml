@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.college.mapper.CollegeMapper">
+
+
+    <resultMap id="collegeModel" type="org.jeecg.modules.college.entity.College">
+        <id property="id" column="id" />
+        <result property="icon" column="icon"/>
+        <result property="collegeCode" column="collegeCode"/>
+        <result property="collegeName" column="collegeName"/>
+        <association property="hasDeparts" column="id" select="org.jeecg.modules.college.mapper.DepartmentMapper.countDepartmentByCollegeId"/>
+    </resultMap>
+
+    <select id="findMyCollegeNames" resultType="org.jeecg.modules.college.vo.CommonVo">
+        SELECT c.id,c.college_name as text
+        FROM zd_college c
+        LEFT JOIN zd_user_college uc on uc.college_id = c.id
+        WHERE 1 = 1
+        <if test="userId != null and userId != '' ">
+            AND uc.user_id = #{userId}
+        </if>
+    </select>
+
+    <select id="findNamesByRegister" resultType="org.jeecg.modules.college.vo.CommonVo">
+        SELECT c.id,c.college_name as text
+        FROM zd_college c
+        WHERE 1 = 1
+        ORDER BY create_time
+    </select>
+
+    <select id="findMyColleges" resultMap="collegeModel">
+        SELECT c.id,c.college_name as collegeName,c.college_code as collegeCode
+        FROM zd_college c
+        LEFT JOIN zd_user_college uc on uc.college_id = c.id
+        WHERE 1 = 1
+        <if test="userId != null and userId != '' ">
+            AND uc.user_id = #{userId}
+        </if>
+        ORDER BY c.sort
+    </select>
+
+    <select id="findNameById" resultType="String">
+        SELECT college_name as collegeName
+        FROM zd_college
+        WHERE 1 = 1
+        AND id = #{id}
+    </select>
+</mapper>

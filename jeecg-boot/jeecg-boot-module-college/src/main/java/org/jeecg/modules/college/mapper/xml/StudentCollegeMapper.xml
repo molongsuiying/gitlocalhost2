@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.college.mapper.StudentCollegeMapper">
+
+
+    <select id="findOne" resultType="org.jeecg.modules.college.entity.StudentCollege">
+        SELECT d.college_id as collegeId,d.id as departmentId,b.id as bunchId,b.major_id as majorId
+        FROM zd_bunch b
+        LEFT JOIN zd_major m on m.id = b.major_id
+        LEFT JOIN zd_department d on d.id = m.department_id
+        WHERE 1 = 1
+        AND b.id = #{bunchId}
+    </select>
+</mapper>

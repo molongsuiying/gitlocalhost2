@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.jeecg.modules.quartz.mapper.SysJobsMapper">
+
+	<!-- 根据jobClassName查询 -->
+	<select id="findByJobClassName" resultType="org.jeecg.modules.quartz.entity.SysJobs">
+		select * from  sys_jobs  where job_class_name = #{jobClassName}
+	</select>
+
+	<select id="findBootingJobs" resultType="org.jeecg.modules.quartz.entity.SysJobs">
+		select j.* from  sys_jobs j
+		LEFT JOIN sys_jobs_msg_version v on v.job_version = j.job_version
+		where j.status = 0 and v.status = 0
+	</select>
+
+	<update id="ceaseJobsByVersion">
+		UPDATE sys_jobs_msg_version SET status = -1
+		WHERE job_version = #{jobVersion}
+	</update>
+</mapper>
